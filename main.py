@@ -1,4 +1,5 @@
 import io
+import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,7 @@ app.add_middleware(
 async def extract_text(image: UploadFile = File(...)):
     # Ensure the uploaded file is an image
     print("DEBUG: Received file with content type:", image.content_type)
-    if not image.content_type.startswith("image/"):
+    if not image.content_type or not image.content_type.startswith("image/"):
         print("DEBUG: File is not an image.")
         raise HTTPException(status_code=400, detail="Invalid file type. Only image files are allowed.")
     
@@ -40,3 +41,8 @@ async def extract_text(image: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error processing image: {e}")
 
     return JSONResponse(status_code=200, content={"extractedText": extracted_text})
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))  # Bind to the PORT variable from Heroku
+    uvicorn.run(app, host="0.0.0.0", port=port)
