@@ -3,3 +3,5 @@ uvicorn==0.22.0
 pillow==9.3.0 --only-binary :all:
 pytesseract==0.3.10
 google-cloud-storage==2.8.0
+setuptools==67.6.1
+wheel==0.38.4
