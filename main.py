@@ -24,28 +24,20 @@ CREDENTIALS_BUCKET_NAME = "credentials5037"  # For storing credentials file
 PDF_BUCKET_NAME = "pdf_url"  # For storing uploaded PDFs (change the name to your bucket)
 
 # Function to download the credentials file from Google Cloud Storage
+import logging
+from google.cloud import storage
+
 def download_credentials_from_gcs():
     try:
-        # Create the GCS client
+        logging.info("Attempting to download credentials from GCS")
+        # Your code to download credentials from GCS
         storage_client = storage.Client()
-
-        # Access the bucket and blob (file)
-        bucket = storage_client.bucket(CREDENTIALS_BUCKET_NAME)
-        blob = bucket.blob("dazzling-tensor-455512-j1-4569e9865ad0.json")  # Replace with your file name
-
-        # Define the local path to save the credentials file
-        local_credentials_path = "/tmp/google-credentials.json"
-        
-        # Download the file to the local path
-        blob.download_to_filename(local_credentials_path)
-        print(f"Downloaded credentials to {local_credentials_path}")
-
-        # Set the environment variable to point to the downloaded credentials file
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = local_credentials_path
-        print("GOOGLE_APPLICATION_CREDENTIALS environment variable set.")
-    
+        bucket = storage_client.get_bucket("credentials5037")
+        blob = bucket.blob("dazzling-tensor-455512-j1-4569e9865ad0.json")
+        blob.download_to_filename("/tmp/dazzling-tensor-455512-j1-4569e9865ad0.json")
+        logging.info("Credentials downloaded successfully")
     except Exception as e:
-        print(f"Error downloading credentials from GCS: {e}")
+        logging.error(f"Error downloading credentials: {e}")
         raise HTTPException(status_code=500, detail=f"Error downloading credentials: {e}")
 
 # Ensure the credentials are downloaded when the app starts
