@@ -7,48 +7,70 @@ from PIL import Image
 import pytesseract
 import uvicorn
 from google.cloud import storage
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Allow frontend access (CORS configuration)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://sajjadalinoor.vercel.app"],  # Explicitly allow only your frontend
-    allow_credentials=True,  # Allow cookies/auth headers if needed
+    allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],  # Limit allowed methods
     allow_headers=["Content-Type", "Authorization"],  # Specify necessary headers
 )
 
-# Fetch the Google Cloud credentials from the environment
-credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+# Google Cloud Storage bucket names
+CREDENTIALS_BUCKET_NAME = "credentials5037"  # For storing credentials file
+PDF_BUCKET_NAME = "pdf_bucket"  # For storing uploaded PDFs (change the name to your bucket)
 
-# Ensure the credentials variable is not None
-if credentials_json is None:
-    raise ValueError("The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+# Function to download the credentials file from Google Cloud Storage
+def download_credentials_from_gcs():
+    try:
+        # Create the GCS client
+        storage_client = storage.Client()
+
+        # Access the bucket and blob (file)
+        bucket = storage_client.bucket(CREDENTIALS_BUCKET_NAME)
+        blob = bucket.blob("dazzling-tensor-455512-j1-4569e9865ad0.json")  # Replace with your file name
+
+        # Define the local path to save the credentials file
+        local_credentials_path = "/tmp/google-credentials.json"
+        
+        # Download the file to the local path
+        blob.download_to_filename(local_credentials_path)
+        print(f"Downloaded credentials to {local_credentials_path}")
+
+        # Set the environment variable to point to the downloaded credentials file
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = local_credentials_path
+        print("GOOGLE_APPLICATION_CREDENTIALS environment variable set.")
+    
+    except Exception as e:
+        print(f"Error downloading credentials from GCS: {e}")
+        raise HTTPException(status_code=500, detail=f"Error downloading credentials: {e}")
+
+# Ensure the credentials are downloaded when the app starts
+download_credentials_from_gcs()
 
 # Create the Google Cloud Storage client using the provided credentials
-storage_client = storage.Client.from_service_account_json(credentials_json)
+storage_client = storage.Client()
 
-# Google Cloud Storage bucket name
-BUCKET_NAME = "pdf_url"
-
-def upload_to_gcs(file: UploadFile):
+def upload_to_gcs(file: UploadFile, bucket_name: str):
     try:
-        # Print file information for debugging
         print(f"Uploading file: {file.filename}, Content Type: {file.content_type}")
 
-        # Get the file content
+        # Read the file content
         file_content = file.file.read()
         print(f"Read {len(file_content)} bytes from the file.")
 
         # Create a GCS bucket client
-        bucket = storage_client.bucket(BUCKET_NAME)
-        print(f"Accessing bucket: {BUCKET_NAME}")
+        bucket = storage_client.bucket(bucket_name)
+        print(f"Accessing bucket: {bucket_name}")
 
         # Generate a blob (file object) in the bucket
         blob = bucket.blob(file.filename)
         print(f"Generated blob for file: {file.filename}")
 
-        # Upload the file
+        # Upload the file content
         blob.upload_from_string(file_content, content_type=file.content_type)
         print(f"File uploaded to GCS as {file.filename}.")
 
@@ -70,8 +92,8 @@ async def upload_pdf(file: UploadFile = File(...)):
     try:
         print(f"Received file: {file.filename}, Content Type: {file.content_type}")
 
-        # Upload the PDF file to Google Cloud Storage
-        file_url = upload_to_gcs(file)
+        # Upload the PDF file to the designated PDF bucket
+        file_url = upload_to_gcs(file, PDF_BUCKET_NAME)
         print(f"File successfully uploaded, returning URL: {file_url}")
 
         # Return the public URL of the uploaded PDF
@@ -89,12 +111,16 @@ async def extract_text(image: UploadFile = File(...)):
     try:
         contents = await image.read()
         img = Image.open(io.BytesIO(contents))
+
+        # Extract text from the image using pytesseract
         extracted_text = pytesseract.image_to_string(img)
+        print(f"Extracted Text: {extracted_text}")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {e}")
 
     return JSONResponse(status_code=200, content={"extractedText": extracted_text})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Get PORT from Heroku
+    port = int(os.environ.get("PORT", 5000))  # Get PORT from environment variable or default to 5000
     uvicorn.run(app, host="0.0.0.0", port=port)
