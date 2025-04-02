@@ -23,34 +23,54 @@ storage_client = storage.Client()
 BUCKET_NAME = "pdf_url"
 
 def upload_to_gcs(file: UploadFile):
-    # Get the file content
-    file_content = file.file.read()
-    
-    # Create a GCS bucket client
-    bucket = storage_client.bucket(BUCKET_NAME)
-    
-    # Generate a blob (file object) in the bucket
-    blob = bucket.blob(file.filename)
-    
-    # Upload the file
-    blob.upload_from_string(file_content, content_type=file.content_type)
-    
-    # Make the file publicly accessible (optional)
-    blob.make_public()
+    try:
+        # Print file information for debugging
+        print(f"Uploading file: {file.filename}, Content Type: {file.content_type}")
 
-    # Return the public URL of the uploaded file
-    return blob.public_url
+        # Get the file content
+        file_content = file.file.read()
+        print(f"Read {len(file_content)} bytes from the file.")
+
+        # Create a GCS bucket client
+        bucket = storage_client.bucket(BUCKET_NAME)
+        print(f"Accessing bucket: {BUCKET_NAME}")
+
+        # Generate a blob (file object) in the bucket
+        blob = bucket.blob(file.filename)
+        print(f"Generated blob for file: {file.filename}")
+
+        # Upload the file
+        blob.upload_from_string(file_content, content_type=file.content_type)
+        print(f"File uploaded to GCS as {file.filename}.")
+
+        # Make the file publicly accessible (optional)
+        blob.make_public()
+        print(f"File {file.filename} is now publicly accessible.")
+
+        # Return the public URL of the uploaded file
+        public_url = blob.public_url
+        print(f"File URL: {public_url}")
+        return public_url
+
+    except Exception as e:
+        print(f"Error in upload_to_gcs: {e}")
+        raise HTTPException(status_code=500, detail=f"Error uploading file: {e}")
+
 @app.post("/uploadPdf")
 async def upload_pdf(file: UploadFile = File(...)):
     try:
+        print(f"Received file: {file.filename}, Content Type: {file.content_type}")
+
         # Upload the PDF file to Google Cloud Storage
         file_url = upload_to_gcs(file)
-        
+        print(f"File successfully uploaded, returning URL: {file_url}")
+
         # Return the public URL of the uploaded PDF
         return JSONResponse(status_code=200, content={"url": file_url})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error uploading file: {e}")
 
+    except Exception as e:
+        print(f"Error in upload_pdf: {e}")
+        raise HTTPException(status_code=500, detail=f"Error uploading file: {e}")
 @app.post("/extractText")
 async def extract_text(image: UploadFile = File(...)):
     if not image.content_type.startswith("image/"):
