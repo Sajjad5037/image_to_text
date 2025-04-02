@@ -1,5 +1,5 @@
 fastapi==0.95.0
 uvicorn==0.22.0
-pillow==9.3.0
+pillow==8.4.0
 pytesseract==0.3.10
 google-cloud-storage==2.8.0
