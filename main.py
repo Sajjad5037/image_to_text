@@ -1,48 +1,40 @@
-import io
 import os
+import io
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import pytesseract
+import uvicorn
 
 app = FastAPI()
 
-# Enable CORS (adjust allowed origins as needed)
+# Enable CORS
+from fastapi.middleware.cors import CORSMiddleware
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["https://sajjadalinoor.vercel.app"],  # Explicitly allow only your frontend
+    allow_credentials=True,  # Allow cookies/auth headers if needed
+    allow_methods=["GET", "POST", "OPTIONS"],  # Limit allowed methods
+    allow_headers=["Content-Type", "Authorization"],  # Specify necessary headers
 )
+
 
 @app.post("/extractText")
 async def extract_text(image: UploadFile = File(...)):
-    # Ensure the uploaded file is an image
-    print("DEBUG: Received file with content type:", image.content_type)
-    if not image.content_type or not image.content_type.startswith("image/"):
-        print("DEBUG: File is not an image.")
+    if not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Invalid file type. Only image files are allowed.")
     
     try:
-        # Read the uploaded file into memory
         contents = await image.read()
-        print("DEBUG: Read file contents successfully. Size:", len(contents), "bytes")
-        
-        # Open the image using Pillow
         img = Image.open(io.BytesIO(contents))
-        print("DEBUG: Image opened successfully. Format:", img.format)
-        
-        # Use pytesseract to extract text from the image
         extracted_text = pytesseract.image_to_string(img)
-        print("DEBUG: Extracted text:", extracted_text)
     except Exception as e:
-        print("DEBUG: Exception occurred during processing:", e)
         raise HTTPException(status_code=500, detail=f"Error processing image: {e}")
 
     return JSONResponse(status_code=200, content={"extractedText": extracted_text})
 
 if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))  # Bind to the PORT variable from Heroku
+    port = int(os.environ.get("PORT", 5000))  # Get PORT from Heroku
     uvicorn.run(app, host="0.0.0.0", port=port)
