@@ -1,2 +1,4 @@
 tesseract-ocr
 tesseract-ocr-eng
+libjpeg-dev
+zlib1g-dev
