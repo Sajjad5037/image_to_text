@@ -1,7 +1,5 @@
 fastapi==0.95.0
 uvicorn==0.22.0
-pillow==10.4.0  # Updated to a compatible version
+pillow==9.3.0
 pytesseract==0.3.10
 google-cloud-storage==2.8.0
-setuptools==67.6.1
-wheel==0.38.4
