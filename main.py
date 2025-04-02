@@ -18,7 +18,16 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],  # Specify necessary headers
 )
 
-storage_client = storage.Client()
+# Fetch the Google Cloud credentials from the environment
+credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+
+# Ensure the credentials variable is not None
+if credentials_json is None:
+    raise ValueError("The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+
+# Create the Google Cloud Storage client using the provided credentials
+storage_client = storage.Client.from_service_account_json(credentials_json)
+
 # Google Cloud Storage bucket name
 BUCKET_NAME = "pdf_url"
 
@@ -71,6 +80,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     except Exception as e:
         print(f"Error in upload_pdf: {e}")
         raise HTTPException(status_code=500, detail=f"Error uploading file: {e}")
+
 @app.post("/extractText")
 async def extract_text(image: UploadFile = File(...)):
     if not image.content_type.startswith("image/"):
