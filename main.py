@@ -122,5 +122,5 @@ async def extract_text(image: UploadFile = File(...)):
     return JSONResponse(status_code=200, content={"extractedText": extracted_text})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))  # Get PORT from environment variable or default to 5000
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
