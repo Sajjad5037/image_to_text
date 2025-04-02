@@ -6,12 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import pytesseract
 import uvicorn
-from google.cloud import storage
-from fastapi.middleware.cors import CORSMiddleware
-import logging
 
-# Ensure logging is set up at the start of your application
-logging.basicConfig(level=logging.INFO)
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 app.add_middleware(
