@@ -10,8 +10,6 @@ import uvicorn
 app = FastAPI()
 
 # Enable CORS
-from fastapi.middleware.cors import CORSMiddleware
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://sajjadalinoor.vercel.app"],  # Explicitly allow only your frontend
@@ -19,7 +17,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],  # Limit allowed methods
     allow_headers=["Content-Type", "Authorization"],  # Specify necessary headers
 )
-
 
 @app.post("/extractText")
 async def extract_text(image: UploadFile = File(...)):
@@ -36,5 +33,5 @@ async def extract_text(image: UploadFile = File(...)):
     return JSONResponse(status_code=200, content={"extractedText": extracted_text})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Get PORT from Heroku
+    port = int(os.environ.get("PORT", 8000))  # Correct port setup for Heroku
     uvicorn.run(app, host="0.0.0.0", port=port)
