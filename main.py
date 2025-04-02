@@ -21,7 +21,7 @@ app.add_middleware(
 
 # Google Cloud Storage bucket names
 CREDENTIALS_BUCKET_NAME = "credentials5037"  # For storing credentials file
-PDF_BUCKET_NAME = "pdf_bucket"  # For storing uploaded PDFs (change the name to your bucket)
+PDF_BUCKET_NAME = "pdf_url"  # For storing uploaded PDFs (change the name to your bucket)
 
 # Function to download the credentials file from Google Cloud Storage
 def download_credentials_from_gcs():
