@@ -1,5 +1,5 @@
 fastapi==0.95.0
 uvicorn==0.22.0
-pillow==8.3.2
-pytesseract==0.3.10
-google-cloud-storage==2.8.0
+pillow==7.1.2
+setuptools>=58.0.0
+wheel>=0.36.0
